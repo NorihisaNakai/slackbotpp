@@ -1,0 +1,7 @@
+notification:
+  check_slack_channnels:
+    - name: sample
+    - name: sample
+  jira_key: 12345
+  slack_token: XXXXX
+  slack_host: slack.com
