@@ -1,0 +1,8 @@
+./sdybot
+./config.yml
+./FindBoost
+./cmake_install.cmake
+./code
+./CMakeCache.txt
+./CMakeFiles
+./Makefile

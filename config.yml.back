@@ -1,0 +1,8 @@
+notification:
+  slack_bot_name: ~
+  jira_key: 12345
+  slack_host: slack.com
+  check_slack_channnels:
+    - name: sdy_all
+    - name: sdy_director
+  slack_token: XXXXXXX
