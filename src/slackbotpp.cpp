@@ -6,6 +6,7 @@ int main( int argc, char* argv[] ){
 		bot_property	property;
 		slack_bot		bot( property.get_slack_token(), property.get_slack_host() );
 		bot.get_rtm_url();
+		bot.start();
 	}
 	catch( std::exception& e){
 		std::cout << e.what() << std::endl;

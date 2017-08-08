@@ -29,9 +29,10 @@ public:
     void send( const std::string& );
 
 protected:
-    const std::string _token;
-    const std::string _host;
-    std::string _websocket_url;
+    const std::string   _token;
+    const std::string   _host;
+    std::string         _websocket_url;
+    connect_response    _connect_response;
 
     websocketpp::client<websocketpp::config::asio_tls_client>   _client;
     websocketpp::connection_hdl _hdl;

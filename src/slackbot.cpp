@@ -1,7 +1,5 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
-#include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 #include <sstream>
 
 #include "../include/slackbot.h"
@@ -53,14 +51,9 @@ void slack_bot::get_rtm_url(){
 
     std::cout << "body = " << body << std::endl;
 
-    boost::property_tree::ptree _ptree;
-    std::stringstream _stringstream;
-    _stringstream << body;
-    boost::property_tree::json_parser::read_json( _stringstream, _ptree );
-    _websocket_url = _ptree.get<std::string>("url");
+    _connect_response.from_message( body );
 
-
-    std::cout << "WEBSOCKET_URL = " << _websocket_url << std::endl;
+    std::cout << "WEBSOCKET_URL = " << _connect_response.url << std::endl;
 }
 
 void slack_bot::websocket_connect() {
@@ -77,10 +70,10 @@ void slack_bot::websocket_connect() {
     _client.set_close_handler( bind( &slack_bot::on_close, this, ::_1 ));
     
     websocketpp::lib::error_code    error_code;
-     auto con = _client.get_connection( _websocket_url, error_code );
+     auto con = _client.get_connection( _connect_response.url, error_code );
 
     if( error_code ) {
-        std::cout << "connect error: URL " << _websocket_url << std::endl;
+        std::cout << "connect error: URL " << _connect_response.url << std::endl;
         _client.get_alog().write( websocketpp::log::alevel::app, error_code.message() );
     }
 
