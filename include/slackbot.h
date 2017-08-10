@@ -3,7 +3,7 @@
 
 #include <websocketpp/config/asio_client.hpp>
 #include <websocketpp/client.hpp>
-#include "../include/websocket_client.h"
+#include "../include/slackmessages.h"
 
 using websocketpp::lib::placeholders::_1;
 using websocketpp::lib::placeholders::_2;
@@ -31,7 +31,6 @@ public:
 protected:
     const std::string   _token;
     const std::string   _host;
-    std::string         _websocket_url;
     connect_response    _connect_response;
 
     websocketpp::client<websocketpp::config::asio_tls_client>   _client;

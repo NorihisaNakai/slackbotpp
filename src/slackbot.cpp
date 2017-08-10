@@ -127,9 +127,29 @@ void slack_bot::on_message( websocketpp::connection_hdl hdl,
                             websocketpp::config::asio_tls_client::message_type::ptr message_ptr){
     std::string msg = message_ptr->get_payload();
     std::cout << "[on_message] message : " << msg << std::endl;
+    recv_message _recv_message( msg );
+
+    send_message _send_message;
+    _send_message.channel = _recv_message.channel;
+    _send_message.text = ">" + _recv_message.text;
+    send( _send_message.get_json() );
 }
 
 void slack_bot::on_close( websocketpp::connection_hdl ){
     _status = websocket_status::close;
     std::cout << "[on_close] close socket" << std::endl;
+}
+
+
+std::string send_message::get_json(){
+    std::stringstream   sstream;
+    sstream <<
+    "{ \r\n" <<
+    "   \"id\": " << counter <<
+    "   \"type\": \"messsage\", \r\n" <<
+    "   \"channel\": \"" << channel << "\"\r\n" <<
+    "   \"text\": \"" << text << "\"\r\n" <<
+    "}";
+
+    return sstream.str();
 }

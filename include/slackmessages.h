@@ -1,50 +1,17 @@
 #ifndef SLACKMESSAGE_H
 #define SLACKMESSAGE_H
 
-#include <std::string>
-#include <std::vector>
+#include <string>
+#include <vector>
 
-struct user {
-    user( std::string _id, std::string _name ) {
-        id( _id ),
-        name( _name )
-    };
-    std::string id;
-    std::string name;
-};
-
-struct channel {
-    channel( std::string _id, std::string name, bool flg ){
-        id( _id ),
-        name( _name ),
-        member_flg( flg )
-    };
-    std::string id;
-    std::string name;
-    bool        member_flg;
-};
-
-struct connect_response {
-    bool                    status;
-    std::string             bot_name;
-    std::string             bot_id;
-    std::vector<user>       users;
-    std::vector<channel>    channels;
-    std::string             url;
-    void                    from_message( std::string );
-}
-
-
-
-enum rtm_types{
-    account_change,
+enum rtm_type{
+    accounts_change,
     bot_added,
     bot_changed,
     channel_archive,
     channel_created,
     channel_deleted,
     channel_history_changed,
-    channel_deleted,
     channel_left,
     channel_marked,
     channel_rename,
@@ -108,10 +75,57 @@ enum rtm_types{
     team_rename,
     user_change,
     user_typing,
+    undefined_type
 };
 
+struct user {
+    user( std::string _id, std::string _name ) :
+        id( _id ),
+        name( _name ){}
+    std::string id;
+    std::string name;
+};
 
+struct channel {
+    channel( std::string _id, std::string _name, bool flg ) :
+        id( _id ),
+        name( _name ),
+        member_flg( flg )
+    {}
+    std::string id;
+    std::string name;
+    bool        member_flg;
+};
 
+struct connect_response {
+    bool                    status;
+    std::string             bot_name;
+    std::string             bot_id;
+    std::vector<user>       users;
+    std::vector<channel>    channels;
+    std::string             url;
+    void                    from_message( std::string );
+};
 
+class recv_message {
+public:
+    recv_message( std::string& );
+    ~recv_message(){}
+    rtm_type    type;
+    std::string ts;
+    std::string user;
+    std::string channel;
+    std::string text;    
+};
+
+class  send_message {
+public:
+    send_message() { counter++; }
+    ~send_message(){}
+    static unsigned int counter;
+    std::string         channel;
+    std::string         text;
+    std::string         get_json();
+};
 
 #endif  //SLACKMESSAGE_H
