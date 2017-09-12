@@ -5,6 +5,9 @@ set(Boost_USE_STATIC_RUNTIME OFF)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O0 -g -std=c++1z")
 
 add_executable(sdybot 
+    src/https.cpp
+    src/jira.cpp
+    src/https.cpp
     src/slackbotpp.cpp
     src/slackbot.cpp
     src/slackmessages.cpp)

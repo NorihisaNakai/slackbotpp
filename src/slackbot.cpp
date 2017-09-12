@@ -1,57 +1,25 @@
 #include <boost/asio.hpp>
 #include <boost/asio/ssl.hpp>
+#include <boost/lexical_cast.hpp>
 #include <sstream>
 
+#include <fstream>
+
 #include "../include/slackbot.h"
+#include "../include/jira.h"
+#include "../include/https.h"
 
 void slack_bot::get_rtm_url(){
-    std::cout << "host: " << _host << std::endl;
-    std::cout << "token: " << _token << std::endl;
-    
-    boost::asio::io_service         _io_service;
-    boost::asio::ip::tcp::socket    _socket(_io_service);
-    boost::asio::ip::tcp::resolver  _resolver(_io_service);
-    boost::asio::ip::tcp::resolver::query
-                                    _query( _host, "https" );
-    boost::asio::ip::tcp::endpoint  _endpoint(*_resolver.resolve(_query));
 
-    boost::asio::ssl::context       _context( boost::asio::ssl::context::sslv23);
-    boost::asio::ssl::stream< boost::asio::ip::tcp::socket > _ssl_stream( _io_service, _context );
-    _ssl_stream.lowest_layer().connect( _endpoint );
-    _ssl_stream.handshake( boost::asio::ssl::stream_base::client );
+    std::string uri = "/api/rtm/start?token=" + _token;
+    std::vector<std::string> header_options;
+    std::string header_option = "Host:" + _host;
+    header_options.push_back( header_option );
 
-    boost::asio::streambuf          _request;
-    std::ostream                    _request_ostream(&_request);
-    _request_ostream << "GET /api/rtm.start?token=";
-    _request_ostream << _token;
-    _request_ostream << " HTTP/1.1\r\n"
-        "Host: ";
-    _request_ostream << _host << "\r\n\r\n";
+    https_stream stream( _host );
+    std::string response_body = stream.get( uri, header_options, "" ); 
 
-    boost::asio::write( _ssl_stream, _request );
-
-    boost::asio::streambuf _response;
-    boost::asio::read_until(_ssl_stream, _response, "\r\n");
-    std::istream response_stream(&_response);
-
-    boost::system::error_code   _error_code;
-    std::string body;
-
-
-    boost::asio::read( _ssl_stream, _response, boost::asio::transfer_at_least(32768), _error_code );
-//    boost::asio::read_until( _ssl_stream, _response, "\r\n", _error_code );
-    if( _error_code ){
-        std::cout << "sslstream read error:" << _error_code.message() << std::endl;
-    }
-		
-    body = boost::asio::buffer_cast<const char*>(_response.data());
-	std::size_t pos = body.find("\r\n\r\n");
-
-	if (pos != std::string::npos) body = body.substr(pos + 4);
-
-    std::cout << "body = " << body << std::endl;
-
-    _connect_response.from_message( body );
+    _connect_response.from_message( response_body );
 
     std::cout << "WEBSOCKET_URL = " << _connect_response.url << std::endl;
 }

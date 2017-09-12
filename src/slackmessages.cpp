@@ -4,6 +4,7 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <sstream>
+#include <iostream>
 
 std::map<std::string, rtm_type> rtm_type_map = {
     { "accounts_change", rtm_type::accounts_change },
@@ -84,13 +85,14 @@ unsigned int send_message::counter = 0;
 void connect_response::from_message( std::string mes ){
     boost::property_tree::ptree _ptree;
     std::stringstream _stringstream;
+
     _stringstream << mes;
     boost::property_tree::json_parser::read_json( _stringstream, _ptree );
     if( _ptree.get<bool>("ok") ){
         url = _ptree.get<std::string>("url");
         bot_name = _ptree.get<std::string>("self.name");
         bot_id = _ptree.get<std::string>("self.id");
-        for( auto& child : _ptree.get_child("channnels") ){
+        for( auto& child : _ptree.get_child("channels") ){
             const boost::property_tree::ptree& info = child.second;
             channel _channel( info.get<std::string>("id"),
                                 info.get<std::string>("name"),
@@ -117,7 +119,13 @@ recv_message::recv_message( std::string& mes ){
     if( itr == rtm_type_map.end() ) type = rtm_type::undefined_type;
     else type = itr->second;
 
-    ts = _ptree.get<std::string>( "ts" );
-    user = _ptree.get<std::string>( "user" );
-    text = _ptree.get<std::string>( "text" );
+    if( type == rtm_type::undefined_type ){
+        std::cout << "type is undefined.\n"
+                  << "message: " << mes << std::endl;
+    }
+    else if( type != rtm_type:: hello ){
+        ts = _ptree.get<std::string>( "ts" );
+        user = _ptree.get<std::string>( "user" );
+        text = _ptree.get<std::string>( "text" );
+    }
 }

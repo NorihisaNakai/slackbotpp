@@ -44,6 +44,8 @@ protected:
     void on_message( websocketpp::connection_hdl,
                      websocketpp::config::asio_tls_client::message_type::ptr );
     void on_close( websocketpp::connection_hdl );
+
+    size_t get_content_length( std::string );
 };
 
 #endif  // SLACK_BOT_H
