@@ -4,7 +4,13 @@
 int main( int argc, char* argv[] ){
 	try{
 		bot_property	property;
-		slack_bot		bot( property.get_slack_token(), property.get_slack_host() );
+		slack_bot		bot(
+			property.get_slack_token(),
+			property.get_slack_host(),
+			property.get_jira_host(),
+			property.get_jira_user(),
+			property.get_jira_password()
+		);
 		bot.get_rtm_url();
 		bot.start();
 	}

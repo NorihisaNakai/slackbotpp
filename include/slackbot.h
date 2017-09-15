@@ -11,9 +11,16 @@ using websocketpp::lib::bind;
 
 class   slack_bot {
 public:
-    slack_bot( const std::string token, const std::string host) :
-        _token( token ),
-        _host( host ),
+    slack_bot(  const std::string slack_token,
+                const std::string slack_hostname,
+                const std::string jira_hostname,
+                const std::string jira_authuser,
+                const std::string jira_authpassword ) :
+        slack_token( slack_token ),
+        slack_host( slack_hostname ),
+        jira_host( jira_hostname ),
+        jira_username( jira_authuser ),
+        jira_password( jira_authpassword ),
         _status( websocket_status::none ){}
     ~slack_bot(){}
 
@@ -29,8 +36,11 @@ public:
     void send( const std::string& );
 
 protected:
-    const std::string   _token;
-    const std::string   _host;
+    const std::string   slack_token;
+    const std::string   slack_host;
+    const std::string   jira_username;
+    const std::string   jira_password;
+    const std::string   jira_host;
     connect_response    _connect_response;
 
     websocketpp::client<websocketpp::config::asio_tls_client>   _client;

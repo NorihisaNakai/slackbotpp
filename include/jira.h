@@ -26,6 +26,8 @@ private:
     std::string session_name;
     std::string session_id;
     void        login();
+    std::string encode64( const std::string& );
+    std::string format_json( const std::string& );
 };
 
 #endif //JIRA_H

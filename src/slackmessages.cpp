@@ -82,11 +82,19 @@ std::map<std::string, rtm_type> rtm_type_map = {
 
 unsigned int send_message::counter = 0;
 
+std::string connect_response::format_json( const std::string& instr ){
+    size_t front_pos = instr.find_first_of("{");
+    size_t last_pos = instr.find_last_of("}");
+
+    std::string json = instr.substr( front_pos, last_pos - front_pos + 1 );
+    return json;   
+}
+
 void connect_response::from_message( std::string mes ){
     boost::property_tree::ptree _ptree;
     std::stringstream _stringstream;
 
-    _stringstream << mes;
+    _stringstream << format_json( mes );
     boost::property_tree::json_parser::read_json( _stringstream, _ptree );
     if( _ptree.get<bool>("ok") ){
         url = _ptree.get<std::string>("url");

@@ -3,21 +3,19 @@
 #include <boost/lexical_cast.hpp>
 #include <sstream>
 
-#include <fstream>
-
 #include "../include/slackbot.h"
 #include "../include/jira.h"
 #include "../include/https.h"
 
 void slack_bot::get_rtm_url(){
 
-    std::string uri = "/api/rtm/start?token=" + _token;
+    std::string uri = "/api/rtm/start?token=" + slack_token;
     std::vector<std::string> header_options;
-    std::string header_option = "Host:" + _host;
+    std::string header_option = "Host:" + slack_host;
     header_options.push_back( header_option );
 
-    https_stream stream( _host );
-    std::string response_body = stream.get( uri, header_options, "" ); 
+    https_stream stream( slack_host );
+    std::string response_body = stream.get( uri, header_options, "" );
 
     _connect_response.from_message( response_body );
 
@@ -96,6 +94,9 @@ void slack_bot::on_message( websocketpp::connection_hdl hdl,
     std::string msg = message_ptr->get_payload();
     std::cout << "[on_message] message : " << msg << std::endl;
     recv_message _recv_message( msg );
+
+    jira_core jira( jira_host, jira_username, jira_password );
+    jira_issue issue = jira.get_issue("JIMU-235");
 
     send_message _send_message;
     _send_message.channel = _recv_message.channel;

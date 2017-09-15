@@ -6,6 +6,18 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include <exception>
+
+
+class http_error : public std::exception{
+public:
+    http_error( const std::string& mes ) : error_mes( mes ){}
+    ~http_error(){}
+    const char* what() const noexcept{ return error_mes.c_str();}
+private:
+    std::string error_mes;
+};
+
 
 class https_stream {
 public:

@@ -104,6 +104,7 @@ struct connect_response {
     std::vector<user>       users;
     std::vector<channel>    channels;
     std::string             url;
+    std::string             format_json( const std::string& );
     void                    from_message( std::string );
 };
 
