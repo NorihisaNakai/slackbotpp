@@ -1,9 +1,10 @@
+#include "../include/singleton.h"
 #include "../include/slackbotpp.h"
 #include "../include/slackbot.h"
 
 int main( int argc, char* argv[] ){
 	try{
-		bot_property	property;
+		auto property = singleton<bot_property>::get();
 		slack_bot		bot(
 			property.get_slack_token(),
 			property.get_slack_host(),
@@ -17,5 +18,6 @@ int main( int argc, char* argv[] ){
 	catch( std::exception& e){
 		std::cout << e.what() << std::endl;
 	}
+	singleton_finalizer::finalize();
 	return 0;
 }

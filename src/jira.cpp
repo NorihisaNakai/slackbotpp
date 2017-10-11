@@ -29,6 +29,12 @@ std::string  jira_core::format_json( const std::string& instr ){
     if( pos509 != std::string::npos ){
         json.erase( pos509, 5 );
     }
+    size_t pos540 = json.find("\r\n540\r\n");
+    if( pos540 != std::string::npos ){
+        json.erase( pos540, 5 );
+    }
+
+    std::cout << "jira json: " << json << std::endl;
     return json;
 }
 
@@ -47,8 +53,14 @@ jira_issue jira_core::get_issue( std::string ticket ){
 
     boost::property_tree::ptree ptree;
     std::stringstream stringstream;
-    stringstream << format_json( response );
-    boost::property_tree::json_parser::read_json( stringstream, ptree );
+    try{
+        stringstream << format_json( response );
+        boost::property_tree::json_parser::read_json( stringstream, ptree );
+    }
+    catch( boost::property_tree::ptree_error& e ){
+        std::cout << "jira_core::get_issue error: " << e.what() << std::endl;
+        std::cout << "json = " << stringstream.str() << std::endl;
+    }
 
     jira_issue issue;
     issue.key = ptree.get<std::string>("key");
