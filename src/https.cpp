@@ -28,6 +28,7 @@ size_t https_stream::get_content_length( const std::string header ){
 std::string https_stream::get( const std::string& uri,
                                const std::vector<std::string>& header_options,
                                const std::string& body ){
+
     ssl_stream_t ssl_stream( io_service, *context_ptr );
     ssl_stream.lowest_layer().connect( *endpoint_ptr );
     ssl_stream.handshake( boost::asio::ssl::stream_base::client );

@@ -3,11 +3,12 @@
 #include <sstream>
 #include <iostream>
 #include <map>
+#include <regex>
 #include <exception>
 
 #include <boost/property_tree/json_parser.hpp>
 
-using map_function = std::function< void ( const recv_message*, const boost::property_tree::ptree&) >;
+using map_function = std::function< void ( recv_message*, const boost::property_tree::ptree&) >;
 
 std::map< std::string, std::pair<rtm_type, map_function> > rtm_type_map = {
     { "accounts_change",        std::make_pair( rtm_type::accounts_change,          &recv_message::nop ) },
@@ -88,9 +89,9 @@ std::string send_message::get_json(){
     std::stringstream   sstream;
     sstream <<
     "{ \r\n" <<
-    "   \"id\": " << counter++ <<
-    "   \"type\": \"messsage\", \r\n" <<
-    "   \"channel\": \"" << channel << "\"\r\n" <<
+    "   \"id\": " << counter++ << ",\r\n"
+    "   \"type\": \"message\", \r\n" <<
+    "   \"channel\": \"" << channel << "\",\r\n" <<
     "   \"text\": \"" << text << "\"\r\n" <<
     "}\r\n\r\n";
 
@@ -105,6 +106,10 @@ std::string connect_response::format_json( const std::string& instr ){
     size_t last_pos = instr.find_last_of("}");
 
     std::string json = instr.substr( front_pos, last_pos - front_pos + 1 );
+
+    std::regex re( "\\r\\n.*?\\r\\n" );
+    json = std::regex_replace( json, re, "" );
+
     std::cout << "format json = " << json << std::endl;
     return json;   
 }
@@ -172,19 +177,28 @@ recv_message::recv_message( std::string& mes ){
     }
 }
 
-void recv_message::hello_recv( const recv_message* parent, const boost::property_tree::ptree& ptree ){
+void recv_message::hello_recv( recv_message* parent, const boost::property_tree::ptree& ptree ){
     std::cout << "hello recv" << std::endl;
 }
 
-void recv_message::message_recv( const recv_message* parent, const boost::property_tree::ptree& ptree ){
-    std::cout << "hello recv" << std::endl;
+void recv_message::message_recv( recv_message* parent, const boost::property_tree::ptree& ptree ){
+    std::cout << "message recv" << std::endl;
+    parent->user = ptree.get<std::string>( "user" );
+    parent->channel = ptree.get<std::string>( "channel" );
+    parent->text = ptree.get<std::string>( "text" );
+    parent->ts = ptree.get<std::string>( "ts" );
+
+    std::cout << "ts = " << parent->ts << std::endl;
+    std::cout << "user = " << parent->user << std::endl;
+    std::cout << "channel = " << parent->channel << std::endl;
+    std::cout << "text = " << parent->text << std::endl;
 }
 
-void recv_message::undefined( const recv_message* parent, const boost::property_tree::ptree& ptree ){
+void recv_message::undefined( recv_message* parent, const boost::property_tree::ptree& ptree ){
     std::cout << "undefined message" << std::endl;
 }
 
-void recv_message::nop( const recv_message* parent, const boost::property_tree::ptree& ptree){
+void recv_message::nop( recv_message* parent, const boost::property_tree::ptree& ptree){
     std::cout << "non operation" << std::endl;
 }
 

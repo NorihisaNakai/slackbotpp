@@ -3,6 +3,7 @@
 #include <boost/lexical_cast.hpp>
 #include <sstream>
 #include <iostream>
+#include <regex>
 
 #include "../include/slackbot.h"
 #include "../include/jira.h"
@@ -17,12 +18,19 @@ void slack_bot::get_rtm_url(){
     header_options.push_back( header_option );
 
     https_stream stream( slack_host );
-    std::string response_body = stream.get( uri, header_options, "" );
-
-    auto response = singleton<connect_response>::get();
+    std::string response_body;
+    for( auto i = 0 ; i < 10; ++i ){
+        try{
+            response_body = stream.get( uri, header_options, "" );
+            break;
+        }
+        catch( ... ){
+            std::cout << "connect error" << std::endl;
+        }
+    }
+    auto& response = singleton<connect_response>::get();
     response.from_message( response_body );
 
-    std::cout << "WEBSOCKET_URL = " << response.url << std::endl;
     for( auto channel : response.channels )
         std::cout << "cannnel_name: " << channel.name << " | channel_id : " << channel.id << std::endl;
 
@@ -31,29 +39,30 @@ void slack_bot::get_rtm_url(){
 }
 
 void slack_bot::websocket_connect() {
-    _client.set_access_channels( websocketpp::log::alevel::all );
-    _client.set_error_channels( websocketpp::log::elevel::all );
+    client.set_access_channels( websocketpp::log::alevel::all );
+    client.set_error_channels( websocketpp::log::elevel::all );
 
     // initialize asio
-    _client.init_asio();
+    client.init_asio();
 
     // Register out handler
-    _client.set_open_handler( bind( &slack_bot::on_open, this, ::_1 ));
-    _client.set_tls_init_handler( bind( &slack_bot::on_tls_init, this, ::_1 ));
-    _client.set_message_handler( bind( &slack_bot::on_message, this, ::_1, ::_2 ));
-    _client.set_close_handler( bind( &slack_bot::on_close, this, ::_1 ));
+    client.set_open_handler( bind( &slack_bot::on_open, this, ::_1 ));
+    client.set_tls_init_handler( bind( &slack_bot::on_tls_init, this, ::_1 ));
+    client.set_message_handler( bind( &slack_bot::on_message, this, ::_1, ::_2 ));
+    client.set_close_handler( bind( &slack_bot::on_close, this, ::_1 ));
     
     websocketpp::lib::error_code    error_code;
-     auto con = _client.get_connection( _connect_response.url, error_code );
+    auto& response = singleton<connect_response>::get();
+    auto con = client.get_connection( response.url, error_code );
 
     if( error_code ) {
-        std::cout << "connect error: URL " << _connect_response.url << std::endl;
-        _client.get_alog().write( websocketpp::log::alevel::app, error_code.message() );
+        std::cout << "connect error: URL " << response.url << std::endl;
+        client.get_alog().write( websocketpp::log::alevel::app, error_code.message() );
     }
 
-    _hdl = con->get_handle();
-    _client.connect( con );
-    _status = websocket_status::connect;
+    hdl = con->get_handle();
+    client.connect( con );
+    status = websocket_status::connect;
 }
 
 websocketpp::lib::shared_ptr<boost::asio::ssl::context>
@@ -74,15 +83,15 @@ websocketpp::lib::shared_ptr<boost::asio::ssl::context>
 
 
 void slack_bot::start(){
-    if( _status != websocket_status::open ) websocket_connect();
-    _client.run();
+    if( status != websocket_status::open ) websocket_connect();
+    client.run();
 }
 
 void slack_bot::send( const std::string& message ){
     std::cout << "slack_bot::send" << std::endl;
-    if( _status == open ) {
+    if( status == open ) {
         try{
-            _client.send( _hdl, message,websocketpp::frame::opcode::text );
+            client.send( hdl, message,websocketpp::frame::opcode::text );
         }
         catch( const websocketpp::lib::error_code& e ){
             std::cout << e.message() << std::endl;
@@ -95,7 +104,7 @@ void slack_bot::send( const std::string& message ){
 
 void slack_bot::on_open( websocketpp::connection_hdl ){
     std::cout << "slack_bot::on_open" << std::endl;
-    _status = websocket_status::open;
+    status = websocket_status::open;
 }
 
 void slack_bot::on_message( websocketpp::connection_hdl hdl,
@@ -105,19 +114,25 @@ void slack_bot::on_message( websocketpp::connection_hdl hdl,
     std::cout << "[on_message] message : " << msg << std::endl;
     recv_message _recv_message( msg );
 
-
     if( _recv_message.type == rtm_type::message ){
-        jira_core jira( jira_host, jira_username, jira_password );
-        jira_issue issue = jira.get_issue("JIMU-235");
-
-        send_message _send_message;
-        _send_message.channel = _recv_message.channel;
-        _send_message.text = ">" + _recv_message.text;
-        send( _send_message.get_json() );
+        // parse issue
+        std::regex re( "(JIMU|DIR|jimu|dir)\\-(\\d+)" );
+        std::smatch match;
+        if( std::regex_search( _recv_message.text, match, re ) ){
+            jira_core jira( jira_host, jira_username, jira_password );
+            jira_issue issue = jira.get_issue(match.str(0));
+            send_message _send_message;
+            _send_message.channel = _recv_message.channel;
+            _send_message.text = ">";
+            _send_message.text += issue.summary;
+            std::cout << "send_message : "<< _send_message.get_json() << std::endl;
+            send( _send_message.get_json() );
+            
+        }
     }
 }
 
 void slack_bot::on_close( websocketpp::connection_hdl ){
     std::cout << "[on_close] close socket" << std::endl;
-    _status = websocket_status::close;
+    status = websocket_status::close;
 }

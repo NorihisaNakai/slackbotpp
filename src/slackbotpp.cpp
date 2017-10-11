@@ -4,7 +4,7 @@
 
 int main( int argc, char* argv[] ){
 	try{
-		auto property = singleton<bot_property>::get();
+		auto& property = singleton<bot_property>::get();
 		slack_bot		bot(
 			property.get_slack_token(),
 			property.get_slack_host(),

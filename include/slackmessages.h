@@ -117,10 +117,10 @@ class recv_message {
 public:
     recv_message( std::string& );
     ~recv_message(){}
-    static void    hello_recv( const recv_message*, const boost::property_tree::ptree& );
-    static void    message_recv( const recv_message*, const boost::property_tree::ptree& );
-    static void    undefined( const recv_message*, const boost::property_tree::ptree& );
-    static void    nop( const recv_message*, const boost::property_tree::ptree& );
+    static void    hello_recv( recv_message*, const boost::property_tree::ptree& );
+    static void    message_recv( recv_message*, const boost::property_tree::ptree& );
+    static void    undefined( recv_message*, const boost::property_tree::ptree& );
+    static void    nop( recv_message*, const boost::property_tree::ptree& );
     rtm_type    type;
     std::string ts;
     std::string user;

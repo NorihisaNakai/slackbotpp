@@ -21,7 +21,7 @@ public:
         jira_host( jira_hostname ),
         jira_username( jira_authuser ),
         jira_password( jira_authpassword ),
-        _status( websocket_status::none ){}
+        status( websocket_status::none ){}
     ~slack_bot(){}
 
     enum websocket_status {
@@ -41,11 +41,10 @@ protected:
     const std::string   jira_username;
     const std::string   jira_password;
     const std::string   jira_host;
-    connect_response    _connect_response;
 
-    websocketpp::client<websocketpp::config::asio_tls_client>   _client;
-    websocketpp::connection_hdl _hdl;
-    websocket_status  _status;
+    websocketpp::client<websocketpp::config::asio_tls_client>   client;
+    websocketpp::connection_hdl hdl;
+    websocket_status  status;
 
     void websocket_connect();
     websocketpp::lib::shared_ptr<boost::asio::ssl::context>
