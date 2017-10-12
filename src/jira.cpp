@@ -42,13 +42,13 @@ jira_issue jira_core::get_issue( std::string ticket ){
     header_options.push_back( cookie );
 
     https_stream    stream( host );
-    std::string uri = "/jira/rest/api/2/issue/" + ticket;
-    std::string response = stream.get( uri, header_options, "" );
 
     boost::property_tree::ptree ptree;
     std::stringstream stringstream;
     for( auto i = 0; i < 10; ++i ){
         try{
+            std::string uri = "/jira/rest/api/2/issue/" + ticket;
+            std::string response = stream.get( uri, header_options, "" );
             stringstream << format_json( response );
             boost::property_tree::json_parser::read_json( stringstream, ptree );
             break;
@@ -59,7 +59,7 @@ jira_issue jira_core::get_issue( std::string ticket ){
         }
         catch( http_error& e ){
             std::cout << "http error: " << e.what() << std::endl;
-            jira_issue issue = { ticket, "can not access jira" };
+            jira_issue issue = { ticket, "can not access jira-issue" };
             return issue;
         }
     }

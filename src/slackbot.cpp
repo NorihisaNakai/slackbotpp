@@ -115,19 +115,8 @@ void slack_bot::on_message( websocketpp::connection_hdl hdl,
     recv_message _recv_message( msg );
 
     if( _recv_message.type == rtm_type::message ){
-        // parse issue
-        std::regex re( "(JIMU|DIR|jimu|dir)\\-(\\d+)" );
-        std::smatch match;
-        if( std::regex_search( _recv_message.text, match, re ) ){
-            jira_core jira( jira_host, jira_username, jira_password );
-            jira_issue issue = jira.get_issue(match.str(0));
-            send_message _send_message;
-            _send_message.channel = _recv_message.channel;
-            _send_message.text = ">";
-            _send_message.text += issue.summary;
-            std::cout << "send_message : "<< _send_message.get_json() << std::endl;
-            send( _send_message.get_json() );
-            
+        for( auto func : user_functions ){
+            func( _recv_message );
         }
     }
 }
@@ -135,4 +124,86 @@ void slack_bot::on_message( websocketpp::connection_hdl hdl,
 void slack_bot::on_close( websocketpp::connection_hdl ){
     std::cout << "[on_close] close socket" << std::endl;
     status = websocket_status::close;
+}
+
+slack_bot::slack_bot(  const std::string slack_token,
+                      const std::string slack_hostname,
+                      const std::string jira_hostname,
+                      const std::string jira_authuser,
+                      const std::string jira_authpassword ) :
+                      slack_token( slack_token ),
+                      slack_host( slack_hostname ),
+                      jira_host( jira_hostname ),
+                      jira_username( jira_authuser ),
+                      jira_password( jira_authpassword ),
+                      status( websocket_status::none ){
+
+    user_functions.push_back( std::bind( &slack_bot::jira_tickets, this, std::placeholders::_1 ) );
+    user_functions.push_back( std::bind( &slack_bot::list_users, this, std::placeholders::_1 ) );
+    user_functions.push_back( std::bind( &slack_bot::list_channels, this, std::placeholders::_1 ) );
+    user_functions.push_back( std::bind( &slack_bot::show_help, this, std::placeholders::_1 ) );
+}
+
+void slack_bot::jira_tickets( const recv_message& recv_mes ){
+    // parse issue
+    std::regex re( "(JIMU|DIR|jimu|dir)\\-(\\d+)" );
+    std::smatch match;
+    if( std::regex_search( recv_mes.text, match, re ) ){
+        jira_core jira( jira_host, jira_username, jira_password );
+        jira_issue issue = jira.get_issue(match.str(0));
+        send_message send_mes;
+        send_mes.channel = recv_mes.channel;
+        send_mes.text = ">";
+        send_mes.text += issue.summary;
+        std::cout << "send_message : "<< send_mes.get_json() << std::endl;
+        send( send_mes.get_json());
+    }
+}
+
+void slack_bot::list_users( const recv_message& recv_mes ){
+    std::regex re( "^nya list users" );
+    std::smatch match;
+    if( std::regex_search( recv_mes.text, match, re ) ){
+        send_message send_mes;
+        send_mes.channel = recv_mes.channel;
+        auto& response = singleton<connect_response>::get();
+        for( auto& user : response.users ){
+            send_mes.text += user.name;
+            send_mes.text += "\\r\\n";
+        }
+        std::cout << "send_message : " << send_mes.get_json() << std::endl;
+        send( send_mes.get_json() );
+    }
+}
+
+void slack_bot::list_channels( const recv_message& recv_mes ){
+    std::regex re( "^nya list channes");
+    std::smatch match;
+    if( std::regex_search( recv_mes.text, match, re ) ){
+        send_message send_mes;
+        send_mes.channel = recv_mes.channel;
+        auto& response = singleton<connect_response>::get();
+        for( auto& channel : response.channels ){
+            send_mes.text += channel.name;
+            send_mes.text += "\\r\\n";
+        }
+        std::cout << "send_message : " << send_mes.get_json() << std::endl;
+        send( send_mes.get_json() );
+    }
+}
+
+void slack_bot::show_help( const recv_message& recv_mes ){
+    std::regex re( "^nya help");
+    std::smatch match;
+    if( std::regex_search( recv_mes.text, match, re ) ){
+        send_message send_mes;
+        send_mes.channel = recv_mes.channel;
+        send_mes.text = 
+        " nya help show this message\\r\\n"
+        " (JIMU|DIR|jimu|dir)\\-(\\d+) display sdy-jira ticket summary\\r\\n"
+        " list users display sdyslack user list\\r\\n"
+        " list channels display sdyslack channel list\\r\\n";
+        std::cout << "send_message : " << send_mes.get_json() << std::endl;
+        send( send_mes.get_json() );
+    }
 }

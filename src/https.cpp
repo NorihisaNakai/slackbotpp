@@ -1,7 +1,6 @@
 #include <boost/lexical_cast.hpp>
 
 #include <iostream>
-#include <fstream>
 
 #include "../include/https.h"
 
@@ -100,9 +99,6 @@ std::string https_stream::post( const std::string& uri,
     else
         boost::asio::read( ssl_stream, response, boost::asio::transfer_all(), error_code );
 
-    std::ofstream   ofs( "./https_get.json");
-    ofs << boost::asio::buffer_cast<const char*>( response.data() );
-    
     return boost::asio::buffer_cast<const char*>( response.data() );
 
 }
