@@ -141,6 +141,7 @@ slack_bot::slack_bot(  const std::string slack_token,
     user_functions.push_back( std::bind( &slack_bot::jira_tickets, this, std::placeholders::_1 ) );
     user_functions.push_back( std::bind( &slack_bot::list_users, this, std::placeholders::_1 ) );
     user_functions.push_back( std::bind( &slack_bot::list_channels, this, std::placeholders::_1 ) );
+    user_functions.push_back( std::bind( &slack_bot::nullpo, this, std::placeholders::_1 ) );
     user_functions.push_back( std::bind( &slack_bot::show_help, this, std::placeholders::_1 ) );
 }
 
@@ -177,7 +178,7 @@ void slack_bot::list_users( const recv_message& recv_mes ){
 }
 
 void slack_bot::list_channels( const recv_message& recv_mes ){
-    std::regex re( "^nya list channes");
+    std::regex re( "^nya list channels");
     std::smatch match;
     if( std::regex_search( recv_mes.text, match, re ) ){
         send_message send_mes;
@@ -187,6 +188,18 @@ void slack_bot::list_channels( const recv_message& recv_mes ){
             send_mes.text += channel.name;
             send_mes.text += "\\r\\n";
         }
+        std::cout << "send_message : " << send_mes.get_json() << std::endl;
+        send( send_mes.get_json() );
+    }
+}
+
+void slack_bot::nullpo( const recv_message& recv_mes ){
+    std::regex re( "(null|NULL|ぬるぽ|ﾇﾙﾎﾟ)");
+    std::smatch match;
+    if( std::regex_search( recv_mes.text, match, re ) ){
+        send_message send_mes;
+        send_mes.channel = recv_mes.channel;
+        send_mes.text = "ｶﾞｯ!!";
         std::cout << "send_message : " << send_mes.get_json() << std::endl;
         send( send_mes.get_json() );
     }

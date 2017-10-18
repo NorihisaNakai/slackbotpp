@@ -59,6 +59,7 @@ protected:
     void jira_tickets( const recv_message& );
     void list_users( const recv_message& );
     void list_channels( const recv_message& );
+    void nullpo( const recv_message& );
     void show_help( const recv_message& );
 };
 
